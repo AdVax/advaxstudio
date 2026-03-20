@@ -1,0 +1,291 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #06060f;
+  --surf: #0c0c1d;
+  --card: #111128;
+  --card2: #181835;
+  --border: #1e1e42;
+  --border2: #2a2a58;
+  --gold: #e8b86d;
+  --gold2: #f5cc82;
+  --goldBg: rgba(232, 184, 109, 0.11);
+  --text: #dcdcf0;
+  --muted: #5a5a88;
+  --muted2: #8888b8;
+  --success: #3ecfbf;
+  --danger: #ff6b6b;
+  --info: #7b8fe8;
+  --r: 14px;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Cairo', sans-serif;
+  direction: rtl;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#root {
+  height: 100%;
+}
+
+input,
+select,
+textarea,
+button {
+  font-family: 'Cairo', sans-serif;
+}
+
+input,
+select,
+textarea {
+  background: var(--surf);
+  border: 1.5px solid var(--border2);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 10px;
+  width: 100%;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  direction: rtl;
+  font-size: 14px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(232, 184, 109, 0.09);
+}
+
+select option {
+  background: var(--card2);
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border2);
+  border-radius: 4px;
+}
+
+/* ─── Animations ─────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.fu { animation: fadeUp 0.32s ease-out; }
+
+/* ─── Modal ──────────────────────────────────────────── */
+.modal-wrap {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(14px);
+  animation: fadeIn 0.2s;
+}
+
+.modal-box {
+  background: var(--card);
+  border: 1.5px solid var(--border2);
+  border-radius: 20px;
+  padding: 30px;
+  width: min(95vw, 580px);
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: fadeUp 0.3s;
+}
+
+.modal-box.wide {
+  width: min(95vw, 680px);
+}
+
+/* ─── Nav button ─────────────────────────────────────── */
+.nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 15px;
+  border-radius: 11px;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: right;
+  transition: all 0.2s;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted2);
+  background: transparent;
+  white-space: nowrap;
+}
+
+.nav-btn:hover:not(.act) {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+
+.nav-btn.act {
+  background: var(--goldBg);
+  color: var(--gold);
+  border: 1px solid rgba(232, 184, 109, 0.18);
+}
+
+/* ─── Buttons ────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-g {
+  background: linear-gradient(135deg, #e8b86d, #f5c87a);
+  color: #08081a;
+}
+.btn-g:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(232, 184, 109, 0.38);
+}
+.btn-g:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-o {
+  background: transparent;
+  border: 1.5px solid var(--border2);
+  color: var(--text);
+}
+.btn-o:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.btn-d {
+  background: rgba(255, 107, 107, 0.1);
+  border: 1px solid rgba(255, 107, 107, 0.22);
+  color: var(--danger);
+}
+.btn-d:hover {
+  background: rgba(255, 107, 107, 0.2);
+}
+
+/* ─── Cards ──────────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  transition: all 0.25s;
+}
+
+.ch:hover {
+  border-color: var(--border2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+
+/* ─── Tags ───────────────────────────────────────────── */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.tg { background: rgba(232, 184, 109, 0.13); color: var(--gold); }
+.ts { background: rgba(62, 207, 191, 0.13);  color: var(--success); }
+.ti { background: rgba(123, 143, 232, 0.13); color: var(--info); }
+.td { background: rgba(255, 107, 107, 0.13); color: var(--danger); }
+.tm { background: rgba(255, 255, 255, 0.06); color: var(--muted2); }
+
+/* ─── Form label ─────────────────────────────────────── */
+label.lbl {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted2);
+}
+
+/* ─── Section card ───────────────────────────────────── */
+.sec {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r);
+  padding: 22px;
+  margin-bottom: 16px;
+}
+
+.hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 18px 0;
+}
+
+/* ─── Grid helpers ───────────────────────────────────── */
+.g2  { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.g3  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.ga  { display: grid; grid-template-columns: repeat(auto-fill, minmax(265px, 1fr)); gap: 16px; }
+.gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(305px, 1fr)); gap: 16px; }
+
+@media (max-width: 600px) {
+  .g2, .g3 { grid-template-columns: 1fr; }
+  .ga, .gal { grid-template-columns: 1fr; }
+}
+
+/* ─── Mobile PWA Improvements ────────────────────────── */
+
+/* Safe area for phones with notch (iPhone X+) */
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Prevent text selection on buttons (mobile feel) */
+button { user-select: none; -webkit-tap-highlight-color: transparent; }
+
+/* Bigger tap targets on mobile */
+@media (max-width: 600px) {
+  .btn { padding: 12px 18px; font-size: 15px; }
+  .nav-btn { padding: 14px 15px; font-size: 15px; }
+  input, select, textarea { font-size: 16px !important; } /* prevent iOS zoom */
+  main { padding: 16px 12px !important; }
+}
+
+/* Standalone PWA mode - hide browser UI gap */
+@media (display-mode: standalone) {
+  header {
+    padding-top: calc(13px + env(safe-area-inset-top)) !important;
+  }
+}
