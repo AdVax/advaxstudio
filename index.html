@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#E8B86D"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="AdVax Studio"/>
+<meta name="description" content="AdVax Studio — حاسبة تكاليف الإنتاج الذكية"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icon.png"/>
+<link rel="icon" href="icon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet"/>
+<title>AdVax Studio</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06060F;--surf:#0C0C1D;--card:#111128;--card2:#181835;
+  --border:#1E1E42;--border2:#2A2A58;
+  --gold:#E8B86D;--goldBg:rgba(232,184,109,0.11);
+  --text:#DCDCF0;--muted:#5A5A88;--muted2:#8888B8;
+  --ok:#3ECFBF;--err:#FF6B6B;--info:#7B8FE8;
+}
+html,body{height:100%;overflow:hidden;font-family:'Cairo',sans-serif;direction:rtl;background:var(--bg);color:var(--text)}
+#root{height:100%;display:flex;flex-direction:column}
+input,select,textarea,button{font-family:'Cairo',sans-serif}
+input,select,textarea{
+  background:var(--surf);border:1.5px solid var(--border2);color:var(--text);
+  padding:10px 14px;border-radius:10px;width:100%;outline:none;
+  transition:border-color .2s;direction:rtl;font-size:16px;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(232,184,109,.09)}
+select option{background:var(--card2)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+button{cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;border:none;font-family:'Cairo',sans-serif}
+@keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+.fu{animation:fu .3s ease-out}
+/* Layout */
+.layout{display:flex;height:100%;overflow:hidden}
+.sidebar{width:230px;flex-shrink:0;background:var(--surf);border-left:1.5px solid var(--border);display:flex;flex-direction:column;padding:16px 10px;transition:transform .3s;z-index:200}
+.sidebar.mobile{position:fixed;right:0;top:0;bottom:0;height:100%}
+.sidebar.hidden{transform:translateX(110%)}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:199}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+header{padding:13px 16px;border-bottom:1.5px solid var(--border);background:var(--surf);display:flex;align-items:center;gap:10px;flex-shrink:0}
+main{flex:1;overflow-y:auto;padding:22px 16px}
+/* Nav */
+.nav-btn{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:11px;width:100%;text-align:right;transition:all .2s;font-size:14px;font-weight:600;color:var(--muted2);background:transparent;white-space:nowrap;margin-bottom:3px}
+.nav-btn:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.nav-btn.act{background:var(--goldBg);color:var(--gold);border:1px solid rgba(232,184,109,.18)}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:10px;font-size:14px;font-weight:700;transition:all .2s;white-space:nowrap}
+.btn-g{background:linear-gradient(135deg,#E8B86D,#F5C87A);color:#08081A}
+.btn-g:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(232,184,109,.35)}
+.btn-g:disabled{opacity:.35;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-o{background:transparent;border:1.5px solid var(--border2);color:var(--text)}
+.btn-o:hover{border-color:var(--gold);color:var(--gold)}
+.btn-r{background:rgba(255,107,107,.1);border:1px solid rgba(255,107,107,.2);color:var(--err)}
+/* Cards */
+.card{background:var(--card);border:1.5px solid var(--border);border-radius:14px;transition:all .25s}
+.card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,.3)}
+/* Tags */
+.tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.tg{background:rgba(232,184,109,.13);color:var(--gold)}
+.ti{background:rgba(123,143,232,.13);color:var(--info)}
+.tm{background:rgba(255,255,255,.06);color:var(--muted2)}
+/* Grids */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.ga{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+@media(max-width:600px){.g2,.g3{grid-template-columns:1fr}.ga{grid-template-columns:1fr}}
+/* Forms */
+.lbl{display:block;margin-bottom:6px;font-size:13px;font-weight:700;color:var(--muted2)}
+.sec{background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px}
+.hr{border:none;border-top:1px solid var(--border);margin:16px 0}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(12px);animation:fi .2s;padding:12px}
+.modal{background:var(--card);border:1.5px solid var(--border2);border-radius:20px;padding:26px;width:100%;max-width:560px;max-height:92vh;overflow-y:auto;animation:fu .3s}
+.modal.wide{max-width:650px}
+/* Toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);padding:11px 24px;border-radius:12px;font-weight:800;font-size:14px;z-index:99999;animation:fu .3s;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+/* Install banner */
+.install-banner{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9990;width:min(94vw,400px);background:linear-gradient(135deg,#181835,#1E1E42);border:1.5px solid rgba(232,184,109,.35);border-radius:18px;padding:14px 16px;box-shadow:0 12px 48px rgba(0,0,0,.7);display:flex;align-items:center;gap:12px;animation:fu .4s}
+/* Stat card */
+.stat{background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:18px;cursor:pointer;transition:all .25s}
+.stat:hover{border-color:var(--border2);transform:translateY(-2px)}
+/* Cost boxes */
+.cost-box{border-radius:9px;padding:9px 11px}
+@media(display-mode:standalone){header{padding-top:calc(13px + env(safe-area-inset-top))!important}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+<script>
+const {useState,useEffect,useMemo,useCallback,Fragment} = React;
+
+// ── Utils
+const uid   = ()=>Math.random().toString(36).slice(2,9);
+const fmt   = (n,c='SAR')=>`${(+n||0).toFixed(2)} ${c}`;
+const fu4   = n=>(+n||0).toFixed(4);
+const today = ()=>new Date().toISOString().slice(0,10);
+
+const MC=['زيوت وشموع','عطور','زهور','تغليف','مكونات جافة','كيماويات','أخرى'];
+const RC=['مستحضرات تجميل','باقات ورد','عطور','شموع','طعام وحلويات','هدايا','أخرى'];
+const UN=['غ','مل','كغ','لتر','قطعة','ملعقة ص','ملعقة ك'];
+const CURR=[{code:'SAR',sym:'ر.س',name:'ريال سعودي'},{code:'AED',sym:'د.إ',name:'درهم إماراتي'},{code:'KWD',sym:'د.ك',name:'دينار كويتي'},{code:'USD',sym:'$',name:'دولار'},{code:'EUR',sym:'€',name:'يورو'}];
+
+function useLS(k,init){
+  const [v,sv]=useState(()=>{try{const s=localStorage.getItem(k);return s?JSON.parse(s):init}catch{return init}});
+  useEffect(()=>{localStorage.setItem(k,JSON.stringify(v))},[v,k]);
+  return [v,sv];
+}
+
+// ── PWA
+function usePWA(){
+  const [pt,setPt]=useState(null);
+  const [done,setDone]=useState(false);
+  const [ios,setIos]=useState(false);
+  useEffect(()=>{
+    setIos(/iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase()));
+    if(window.matchMedia('(display-mode:standalone)').matches||window.navigator.standalone){setDone(true);return}
+    const h=e=>{e.preventDefault();setPt(e)};
+    window.addEventListener('beforeinstallprompt',h);
+    return()=>window.removeEventListener('beforeinstallprompt',h);
+  },[]);
+  const install=async()=>{if(!pt)return;pt.prompt();const{outcome}=await pt.userChoice;if(outcome==='accepted'){setDone(true);setPt(null)}};
+  return{pt,done,ios,install};
+}
+
+// ── Toast
+function Toast({t}){
+  if(!t)return null;
+  const bg=t.type==='err'?'#FF6B6B':t.type==='warn'?'#E8B86D':'#3ECFBF';
+  return React.createElement('div',{className:'toast',style:{background:bg,color:'#06060F'}},t.msg);
+}
+
+// ── Modal
+function Modal({title,onClose,children,wide}){
+  return React.createElement('div',{className:'modal-bg',onClick:e=>e.target===e.currentTarget&&onClose()},
+    React.createElement('div',{className:`modal${wide?' wide':''}`},
+      React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}},
+        React.createElement('h2',{style:{fontSize:18,fontWeight:900}},title),
+        React.createElement('button',{onClick:onClose,style:{background:'rgba(255,255,255,.07)',borderRadius:8,padding:'6px 8px',color:'var(--muted2)',fontSize:18,lineHeight:1}},'✕')
+      ),
+      children
+    )
+  );
+}
+
+// ── Confirm
+function Confirm({msg,onYes,onNo}){
+  return React.createElement('div',{className:'modal-bg'},
+    React.createElement('div',{className:'modal',style:{maxWidth:360,textAlign:'center'}},
+      React.createElement('div',{style:{fontSize:44,marginBottom:12}},'⚠️'),
+      React.createElement('p',{style:{fontSize:15,lineHeight:1.7,marginBottom:20}},msg),
+      React.createElement('div',{style:{display:'flex',gap:10,justifyContent:'center'}},
+        React.createElement('button',{className:'btn btn-r',onClick:onYes},'تأكيد الحذف'),
+        React.createElement('button',{className:'btn btn-o',onClick:onNo},'إلغاء')
+      )
+    )
+  );
+}
+
+// ── Install Banner
+function InstallBanner(){
+  const {pt,done,ios,install}=usePWA();
+  const [dis,setDis]=useState(()=>localStorage.getItem('avx-dis')==='1');
+  if(done||dis)return null;
+  if(!pt&&!ios)return null;
+  const dismiss=()=>{setDis(true);localStorage.setItem('avx-dis','1')};
+  return React.createElement('div',{className:'install-banner'},
+    React.createElement('div',{style:{width:44,height:44,borderRadius:12,background:'linear-gradient(135deg,#E8B86D,#F5CC80)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:22}},'📱'),
+    React.createElement('div',{style:{flex:1}},
+      React.createElement('div',{style:{fontWeight:800,fontSize:13,color:'#fff',marginBottom:3}},'ثبّت AdVax Studio'),
+      ios
+        ? React.createElement('div',{style:{fontSize:11,color:'var(--muted2)'}},'اضغط ',React.createElement('b',{style:{color:'var(--gold)'}},'□↑'),' ثم "أضف إلى الشاشة الرئيسية"')
+        : React.createElement('div',{style:{fontSize:11,color:'var(--muted2)'}},'يعمل بدون إنترنت بعد التثبيت')
+    ),
+    React.createElement('div',{style:{display:'flex',flexDirection:'column',gap:6}},
+      !ios && React.createElement('button',{onClick:install,className:'btn btn-g',style:{padding:'7px 12px',fontSize:12}},'⬇ تثبيت'),
+      React.createElement('button',{onClick:dismiss,style:{background:'rgba(255,255,255,.06)',border:'1px solid var(--border2)',borderRadius:8,padding:'6px 10px',color:'var(--muted2)',fontSize:11}},'لاحقاً')
+    )
+  );
+}
+
+// ── Sidebar
+function Sidebar({page,setPage,open,setOpen}){
+  const nav=[
+    {id:'dashboard',ic:'🏠',label:'لوحة التحكم'},
+    {id:'materials',ic:'📦',label:'المواد الخام'},
+    {id:'recipes',ic:'📖',label:'الوصفات'},
+    {id:'settings',ic:'⚙️',label:'الإعدادات'},
+  ];
+  const isMob=window.innerWidth<860;
+  return React.createElement(Fragment,null,
+    open&&isMob&&React.createElement('div',{className:'overlay',onClick:()=>setOpen(false)}),
+    React.createElement('aside',{className:`sidebar${isMob?' mobile':''}${isMob&&!open?' hidden':''}`},
+      React.createElement('div',{style:{padding:'8px 10px',marginBottom:22}},
+        React.createElement('div',{style:{display:'flex',alignItems:'center',gap:9,marginBottom:2}},
+          React.createElement('div',{style:{width:34,height:34,borderRadius:9,background:'linear-gradient(135deg,#E8B86D,#F5CC80)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18}},'🧪'),
+          React.createElement('span',{style:{fontWeight:900,fontSize:16,color:'var(--gold)'}},'AdVax Studio')
+        ),
+        React.createElement('div',{style:{fontSize:11,color:'var(--muted)',paddingRight:43}},'حاسبة تكاليف الإنتاج')
+      ),
+      React.createElement('nav',{style:{flex:1}},
+        nav.map(n=>React.createElement('button',{key:n.id,className:`nav-btn${page===n.id?' act':''}`,onClick:()=>{setPage(n.id);setOpen(false)}},
+          React.createElement('span',{style:{fontSize:16}},n.ic),n.label,
+          page===n.id&&React.createElement('span',{style:{marginRight:'auto',fontSize:12}},'›')
+        ))
+      ),
+      React.createElement('div',{style:{borderTop:'1px solid var(--border)',paddingTop:12,textAlign:'center',fontSize:11,color:'var(--muted)'}},
+        'AdVax © ',new Date().getFullYear()
+      )
+    )
+  );
+}
+
+// ── Dashboard
+function Dashboard({materials,recipes,currency,setPage}){
+  const mostExp=recipes.length?[...recipes].sort((a,b)=>b.costPerUnit-a.costPerUnit)[0]:null;
+  const bestM=recipes.filter(r=>r.margin!==null).sort((a,b)=>b.margin-a.margin)[0];
+  const stats=[
+    {ic:'📦',label:'المواد الخام',val:materials.length,sub:'مادة',color:'var(--info)',pg:'materials'},
+    {ic:'📖',label:'الوصفات',val:recipes.length,sub:'وصفة',color:'var(--gold)',pg:'recipes'},
+    {ic:'💰',label:'أغلى منتج',val:mostExp?mostExp.name:'—',sub:mostExp?fmt(mostExp.costPerUnit,currency):'لا توجد',color:'var(--err)',pg:'recipes'},
+    {ic:'📈',label:'أفضل ربح',val:bestM?`${bestM.margin.toFixed(1)}%`:'—',sub:bestM?bestM.name:'أضف سعر بيع',color:'var(--ok)',pg:'recipes'},
+  ];
+  return React.createElement('div',{className:'fu'},
+    React.createElement('div',{style:{marginBottom:22}},
+      React.createElement('h1',{style:{fontSize:22,fontWeight:900,marginBottom:4}},'مرحباً في ',React.createElement('span',{style:{color:'var(--gold)'}},'AdVax Studio'),' 👋'),
+      React.createElement('p',{style:{color:'var(--muted2)',fontSize:14}},'نظرة شاملة على تكاليف إنتاجك')
+    ),
+    React.createElement('div',{className:'ga',style:{marginBottom:20}},
+      stats.map((s,i)=>React.createElement('div',{key:i,className:'stat',onClick:()=>setPage(s.pg)},
+        React.createElement('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:12}},
+          React.createElement('div',{style:{width:40,height:40,borderRadius:10,background:`${s.color}18`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}},s.ic),
+          React.createElement('span',{style:{fontSize:18,color:'var(--muted)'}})
+        ),
+        React.createElement('div',{style:{fontSize:18,fontWeight:900,marginBottom:3}},s.val),
+        React.createElement('div',{style:{fontSize:13,color:'var(--muted2)'}}),
+        React.createElement('div',{style:{fontSize:12,color:'var(--muted)'}},' ',s.label,' · ',s.sub)
+      ))
+    ),
+    React.createElement('div',{className:'g2'},
+      // Recent materials
+      React.createElement('div',{className:'sec',style:{margin:0}},
+        React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}},
+          React.createElement('h3',{style:{fontSize:14,fontWeight:800}},'📦 آخر المواد'),
+          React.createElement('button',{onClick:()=>setPage('materials'),style:{background:'none',color:'var(--gold)',fontSize:12,fontWeight:700}},'إدارة ←')
+        ),
+        materials.length===0
+          ? React.createElement('div',{style:{textAlign:'center',padding:'16px 0',color:'var(--muted)'}},
+              React.createElement('div',{style:{fontSize:28,marginBottom:8}},'📦'),
+              React.createElement('p',{style:{fontSize:13}},'لا توجد مواد بعد'),
+              React.createElement('button',{className:'btn btn-g',style:{marginTop:10,fontSize:12,padding:'7px 14px'},onClick:()=>setPage('materials')},'+ إضافة')
+            )
+          : materials.slice(-5).reverse().map(m=>React.createElement('div',{key:m.id,style:{display:'flex',justifyContent:'space-between',padding:'7px 0',borderBottom:'1px solid var(--border)'}},
+              React.createElement('span',{style:{fontSize:13,fontWeight:600}},m.name),
+              React.createElement('span',{style:{color:'var(--gold)',fontSize:12,fontWeight:700}},fu4(m.currentUnitCost),'/',m.currentUnit)
+            ))
+      ),
+      // Recent recipes
+      React.createElement('div',{className:'sec',style:{margin:0}},
+        React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}},
+          React.createElement('h3',{style:{fontSize:14,fontWeight:800}},'📖 آخر الوصفات'),
+          React.createElement('button',{onClick:()=>setPage('recipes'),style:{background:'none',color:'var(--gold)',fontSize:12,fontWeight:700}},'إدارة ←')
+        ),
+        recipes.length===0
+          ? React.createElement('div',{style:{textAlign:'center',padding:'16px 0',color:'var(--muted)'}},
+              React.createElement('div',{style:{fontSize:28,marginBottom:8}},'📖'),
+              React.createElement('p',{style:{fontSize:13}},'لا توجد وصفات بعد'),
+              React.createElement('button',{className:'btn btn-g',style:{marginTop:10,fontSize:12,padding:'7px 14px'},onClick:()=>setPage('recipes')},'+ إضافة')
+            )
+          : recipes.slice(-5).reverse().map(r=>React.createElement('div',{key:r.id,style:{display:'flex',justifyContent:'space-between',padding:'7px 0',borderBottom:'1px solid var(--border)'}},
+              React.createElement('span',{style:{fontSize:13,fontWeight:600}},r.name),
+              React.createElement('div',{style:{textAlign:'left'}},
+                React.createElement('div',{style:{color:'var(--gold)',fontSize:12,fontWeight:700}},fmt(r.costPerUnit,currency)),
+                r.margin!==null&&React.createElement('div',{style:{fontSize:11,color:r.margin>30?'var(--ok)':'var(--err)'}},r.margin.toFixed(1),'% ربح')
+              )
+            ))
+      )
+    ),
+    materials.length===0&&React.createElement('div',{style:{background:'rgba(232,184,109,.07)',border:'1.5px dashed rgba(232,184,109,.28)',borderRadius:13,padding:16,marginTop:14,display:'flex',gap:10}},
+      React.createElement('div',{style:{fontSize:22}},'⭐'),
+      React.createElement('div',null,
+        React.createElement('div',{style:{fontWeight:800,color:'var(--gold)',marginBottom:4}},'ابدأ من هنا!'),
+        React.createElement('div',{style:{fontSize:13,color:'var(--muted2)',lineHeight:1.8}},
+          React.createElement('b',{style:{color:'var(--text)'}},'1. '),'أضف مواد خامك من صفحة "المواد الخام"',React.createElement('br'),
+          React.createElement('b',{style:{color:'var(--text)'}},'2. '),'أنشئ وصفاتك واختر المكونات',React.createElement('br'),
+          React.createElement('b',{style:{color:'var(--text)'}},'✨ '),'التكلفة تُحسب تلقائياً وتتحدث فور تغيير أي سعر'
+        )
+      )
+    )
+  );
+}
+
+// ── Materials Page
+function Materials({materials,setMaterials,currency,showToast}){
+  const [srch,setSrch]=useState('');
+  const [cat,setCat]=useState('الكل');
+  const [modal,setModal]=useState(null);
+  const [conf,setConf]=useState(null);
+  const filtered=materials.filter(m=>(cat==='الكل'||m.category===cat)&&m.name.includes(srch));
+
+  const save=d=>{
+    if(d.id){setMaterials(p=>p.map(m=>m.id===d.id?d:m));showToast('✓ تم تحديث المادة')}
+    else{setMaterials(p=>[...p,{...d,id:uid()}]);showToast('✓ تمت إضافة المادة')}
+    setModal(null);
+  };
+  const del=id=>{setMaterials(p=>p.filter(m=>m.id!==id));setConf(null);showToast('تم حذف المادة','err')};
+
+  return React.createElement('div',{className:'fu'},
+    React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20,flexWrap:'wrap',gap:10}},
+      React.createElement('div',null,
+        React.createElement('h1',{style:{fontSize:22,fontWeight:900,marginBottom:3}},'📦 المواد الخام'),
+        React.createElement('p',{style:{color:'var(--muted2)',fontSize:13}},materials.length,' مادة مسجلة')
+      ),
+      React.createElement('button',{className:'btn btn-g',onClick:()=>setModal('add')},'+ إضافة مادة')
+    ),
+    React.createElement('div',{style:{display:'flex',gap:10,marginBottom:16,flexWrap:'wrap'}},
+      React.createElement('div',{style:{position:'relative',flex:1,minWidth:160}},
+        React.createElement('span',{style:{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:'var(--muted)',pointerEvents:'none'}},'🔍'),
+        React.createElement('input',{value:srch,onChange:e=>setSrch(e.target.value),placeholder:'بحث...',style:{paddingRight:38}})
+      ),
+      React.createElement('select',{value:cat,onChange:e=>setCat(e.target.value),style:{width:'auto',minWidth:130}},
+        React.createElement('option',null,'الكل'),MC.map(c=>React.createElement('option',{key:c},c))
+      )
+    ),
+    filtered.length===0
+      ? React.createElement('div',{style:{textAlign:'center',padding:'50px 0',color:'var(--muted)'}},
+          React.createElement('div',{style:{fontSize:48,marginBottom:12}},'📦'),
+          React.createElement('p',{style:{fontSize:15,marginBottom:12}},srch?'لا توجد مواد تطابق البحث':'لا توجد مواد بعد'),
+          !srch&&React.createElement('button',{className:'btn btn-g',onClick:()=>setModal('add')},'+ إضافة مادة الآن')
+        )
+      : React.createElement('div',{className:'ga'},filtered.map(m=>React.createElement(MatCard,{key:m.id,mat:m,currency,onEdit:()=>setModal(m),onDel:()=>setConf(m.id)}))),
+    modal&&React.createElement(MatModal,{mat:modal==='add'?null:modal,onSave:save,onClose:()=>setModal(null),currency}),
+    conf&&React.createElement(Confirm,{msg:'هل أنت متأكد من حذف هذه المادة؟',onYes:()=>del(conf),onNo:()=>setConf(null)})
+  );
+}
+
+function MatCard({mat,currency,onEdit,onDel}){
+  const [exp,setExp]=useState(false);
+  const latest=mat.purchases?.[mat.purchases.length-1];
+  return React.createElement('div',{className:'card',style:{padding:16}},
+    React.createElement('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:10}},
+      React.createElement('div',null,
+        React.createElement('h3',{style:{fontSize:14,fontWeight:800,marginBottom:4}},mat.name),
+        React.createElement('span',{className:'tag ti'},mat.category)
+      ),
+      React.createElement('div',{style:{display:'flex',gap:5}},
+        React.createElement('button',{onClick:onEdit,style:{background:'rgba(123,143,232,.12)',borderRadius:8,padding:'6px 8px',color:'var(--info)',fontSize:13}},'✏️'),
+        React.createElement('button',{onClick:onDel,style:{background:'rgba(255,107,107,.12)',borderRadius:8,padding:'6px 8px',color:'var(--err)',fontSize:13}},'🗑')
+      )
+    ),
+    React.createElement('div',{style:{background:'var(--goldBg)',border:'1px solid rgba(232,184,109,.16)',borderRadius:9,padding:'10px 12px',marginBottom:8}},
+      React.createElement('div',{style:{fontSize:11,color:'var(--muted2)',marginBottom:2}},'سعر الوحدة الحالي'),
+      React.createElement('div',{style:{fontSize:18,fontWeight:900,color:'var(--gold)'}},fu4(mat.currentUnitCost),React.createElement('span',{style:{fontSize:12,color:'var(--muted2)',marginRight:4}},currency,'/',mat.currentUnit))
+    ),
+    latest&&React.createElement('div',{style:{fontSize:11,color:'var(--muted)',marginBottom:8}},'🕐 آخر شراء: ',latest.quantity,' ',mat.currentUnit,' بـ ',fmt(latest.totalPrice,currency),' — ',latest.date),
+    React.createElement('button',{onClick:()=>setExp(!exp),style:{background:'none',color:'var(--muted2)',fontSize:11,display:'flex',alignItems:'center',gap:4}},
+      '📋 ',mat.purchases?.length||0,' عملية ',exp?'▲':'▼'
+    ),
+    exp&&mat.purchases?.length>0&&React.createElement('div',{style:{marginTop:8,borderTop:'1px solid var(--border)',paddingTop:8}},
+      [...mat.purchases].reverse().map((p,i)=>React.createElement('div',{key:p.id,style:{display:'flex',justifyContent:'space-between',flexWrap:'wrap',gap:4,fontSize:11,padding:'4px 8px',borderRadius:6,marginBottom:3,background:i===0?'rgba(232,184,109,.06)':'transparent',border:i===0?'1px solid rgba(232,184,109,.12)':'none'}},
+        React.createElement('span',{style:{color:'var(--muted2)'}},p.date),
+        React.createElement('span',null,p.quantity,' ',mat.currentUnit),
+        React.createElement('span',{style:{color:'var(--gold)',fontWeight:700}},fmt(p.totalPrice,currency)),
+        React.createElement('span',{style:{color:'var(--ok)'}},fu4(p.unitCost),'/وحدة'),
+        i===0&&React.createElement('span',{className:'tag tg',style:{fontSize:9}},'الحالي')
+      ))
+    )
+  );
+}
+
+function MatModal({mat,onSave,onClose,currency}){
+  const [name,setName]=useState(mat?.name||'');
+  const [cat,setCat]=useState(mat?.category||MC[0]);
+  const [purchases,setPurch]=useState(mat?.purchases||[]);
+  const [np,setNp]=useState({date:today(),qty:'',unit:UN[0],price:''});
+  const addP=()=>{
+    const qty=parseFloat(np.qty),price=parseFloat(np.price);
+    if(!qty||!price)return;
+    setPurch(p=>[...p,{id:uid(),date:np.date,quantity:qty,unit:np.unit,totalPrice:price,unitCost:price/qty}]);
+    setNp(p=>({...p,qty:'',price:''}));
+  };
+  const save=()=>{
+    if(!name.trim()||purchases.length===0)return;
+    const l=purchases[purchases.length-1];
+    onSave({...(mat||{}),name:name.trim(),category:cat,purchases,currentUnitCost:l.unitCost,currentUnit:l.unit});
+  };
+  const prev=np.qty&&np.price?(parseFloat(np.price)/parseFloat(np.qty)).toFixed(4):null;
+  const h=React.createElement;
+  return h(Modal,{title:mat?'✏️ تعديل المادة':'➕ إضافة مادة',onClose},
+    h('div',{style:{display:'flex',flexDirection:'column',gap:12}},
+      h('div',{className:'g2'},
+        h('div',null,h('label',{className:'lbl'},'اسم المادة *'),h('input',{value:name,onChange:e=>setName(e.target.value),placeholder:'مثال: زبدة الشيا'})),
+        h('div',null,h('label',{className:'lbl'},'الفئة'),h('select',{value:cat,onChange:e=>setCat(e.target.value)},MC.map(c=>h('option',{key:c},c))))
+      ),
+      h('hr',{className:'hr'}),
+      h('h4',{style:{fontSize:14,fontWeight:800}},'📦 سجل المشتريات'),
+      h('div',{style:{background:'var(--card2)',borderRadius:11,padding:14,border:'1px solid var(--border2)'}},
+        h('p',{style:{fontSize:12,color:'var(--muted2)',marginBottom:10,fontWeight:600}},'إضافة عملية شراء جديدة'),
+        h('div',{className:'g2',style:{marginBottom:10}},
+          h('div',null,h('label',{className:'lbl'},'التاريخ'),h('input',{type:'date',value:np.date,onChange:e=>setNp(p=>({...p,date:e.target.value}))})),
+          h('div',null,h('label',{className:'lbl'},'الوحدة'),h('select',{value:np.unit,onChange:e=>setNp(p=>({...p,unit:e.target.value}))},UN.map(u=>h('option',{key:u},u))))
+        ),
+        h('div',{className:'g2',style:{marginBottom:10}},
+          h('div',null,h('label',{className:'lbl'},'الكمية'),h('input',{type:'number',value:np.qty,onChange:e=>setNp(p=>({...p,qty:e.target.value})),placeholder:'500',min:'0',step:'any'})),
+          h('div',null,h('label',{className:'lbl'},'السعر الإجمالي (',currency,')'),h('input',{type:'number',value:np.price,onChange:e=>setNp(p=>({...p,price:e.target.value})),placeholder:'45',min:'0',step:'any'}))
+        ),
+        prev&&h('div',{style:{background:'rgba(62,207,191,.1)',borderRadius:8,padding:'6px 10px',fontSize:12,color:'var(--ok)',marginBottom:10}},'✓ سعر الوحدة: ',prev,' ',currency,'/',np.unit),
+        h('button',{className:'btn btn-o',style:{width:'100%',justifyContent:'center'},onClick:addP},'+ إضافة للسجل')
+      ),
+      purchases.length>0&&h('div',null,
+        h('p',{style:{fontSize:12,color:'var(--muted2)',marginBottom:8}},'السجل (',purchases.length,' عملية)'),
+        purchases.map((p,i)=>h('div',{key:p.id,style:{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 11px',background:i===purchases.length-1?'rgba(232,184,109,.06)':'var(--card2)',border:`1px solid ${i===purchases.length-1?'rgba(232,184,109,.18)':'var(--border)'}`,borderRadius:9,marginBottom:5}},
+          h('div',null,
+            h('div',{style:{fontSize:12,fontWeight:700}},p.date,' — ',p.quantity,' ',p.unit),
+            h('div',{style:{fontSize:11,color:'var(--muted)'}},fmt(p.totalPrice,currency),' | ',fu4(p.unitCost),'/وحدة')
+          ),
+          h('div',{style:{display:'flex',alignItems:'center',gap:7}},
+            i===purchases.length-1&&h('span',{className:'tag tg'},'الأحدث'),
+            h('button',{onClick:()=>setPurch(pr=>pr.filter(x=>x.id!==p.id)),style:{background:'none',color:'var(--err)',fontSize:14}},'✕')
+          )
+        ))
+      ),
+      purchases.length===0&&h('p',{style:{color:'var(--err)',fontSize:12,textAlign:'center'}},'* يجب إضافة عملية شراء واحدة على الأقل'),
+      h('div',{style:{display:'flex',gap:10}},
+        h('button',{className:'btn btn-g',style:{flex:1,justifyContent:'center'},onClick:save,disabled:!name.trim()||purchases.length===0},'✓ ',mat?'حفظ التغييرات':'إضافة المادة'),
+        h('button',{className:'btn btn-o',onClick:onClose},'إلغاء')
+      )
+    )
+  );
+}
+
+// ── Recipes Page
+function Recipes({recipes,setRecipes,materials,currency,showToast}){
+  const [srch,setSrch]=useState('');
+  const [cat,setCat]=useState('الكل');
+  const [modal,setModal]=useState(null);
+  const [conf,setConf]=useState(null);
+  const filtered=recipes.filter(r=>(cat==='الكل'||r.category===cat)&&r.name.includes(srch));
+  const save=d=>{
+    if(d.id){setRecipes(p=>p.map(r=>r.id===d.id?{...d}:r));showToast('✓ تم تحديث الوصفة')}
+    else{setRecipes(p=>[...p,{...d,id:uid()}]);showToast('✓ تمت إضافة الوصفة')}
+    setModal(null);
+  };
+  const del=id=>{setRecipes(p=>p.filter(r=>r.id!==id));setConf(null);showToast('تم حذف الوصفة','err')};
+  const dup=r=>{setRecipes(p=>[...p,{...r,id:uid(),name:`${r.name} (نسخة)`}]);showToast('✓ تم تكرار الوصفة','warn')};
+  return React.createElement('div',{className:'fu'},
+    React.createElement('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20,flexWrap:'wrap',gap:10}},
+      React.createElement('div',null,
+        React.createElement('h1',{style:{fontSize:22,fontWeight:900,marginBottom:3}},'📖 الوصفات'),
+        React.createElement('p',{style:{color:'var(--muted2)',fontSize:13}},recipes.length,' وصفة محفوظة')
+      ),
+      React.createElement('button',{className:'btn btn-g',onClick:()=>setModal('add'),disabled:materials.length===0},'+ إضافة وصفة')
+    ),
+    materials.length===0&&React.createElement('div',{style:{background:'rgba(232,184,109,.07)',border:'1.5px dashed rgba(232,184,109,.25)',borderRadius:11,padding:13,marginBottom:16,fontSize:13,color:'var(--muted2)',display:'flex',gap:8,alignItems:'center'}},
+      '⚠️ ','لإنشاء وصفات، أضف مواد خام أولاً'
+    ),
+    React.createElement('div',{style:{display:'flex',gap:10,marginBottom:16,flexWrap:'wrap'}},
+      React.createElement('div',{style:{position:'relative',flex:1,minWidth:160}},
+        React.createElement('span',{style:{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',color:'var(--muted)',pointerEvents:'none'}},'🔍'),
+        React.createElement('input',{value:srch,onChange:e=>setSrch(e.target.value),placeholder:'بحث...',style:{paddingRight:38}})
+      ),
+      React.createElement('select',{value:cat,onChange:e=>setCat(e.target.value),style:{width:'auto',minWidth:130}},
+        React.createElement('option',null,'الكل'),RC.map(c=>React.createElement('option',{key:c},c))
+      )
+    ),
+    filtered.length===0
+      ? React.createElement('div',{style:{textAlign:'center',padding:'50px 0',color:'var(--muted)'}},
+          React.createElement('div',{style:{fontSize:48,marginBottom:12}},'📖'),
+          React.createElement('p',{style:{fontSize:15,marginBottom:12}},srch?'لا توجد وصفات تطابق البحث':'لا توجد وصفات بعد'),
+          !srch&&materials.length>0&&React.createElement('button',{className:'btn btn-g',onClick:()=>setModal('add')},'+ إضافة وصفة الآن')
+        )
+      : React.createElement('div',{className:'ga'},filtered.map(r=>React.createElement(RecCard,{key:r.id,r,currency,materials,onEdit:()=>setModal(r),onDel:()=>setConf(r.id),onDup:()=>dup(r)}))),
+    modal&&React.createElement(RecModal,{recipe:modal==='add'?null:modal,materials,onSave:save,onClose:()=>setModal(null),currency}),
+    conf&&React.createElement(Confirm,{msg:'هل أنت متأكد من حذف هذه الوصفة؟',onYes:()=>del(conf),onNo:()=>setConf(null)})
+  );
+}
+
+function RecCard({r,currency,onEdit,onDel,onDup,materials}){
+  const [exp,setExp]=useState(false);
+  const mc=r.margin===null?'var(--muted)':r.margin>50?'var(--ok)':r.margin>20?'var(--gold)':'var(--err)';
+  return React.createElement('div',{className:'card',style:{padding:16}},
+    React.createElement('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:10}},
+      React.createElement('div',{style:{flex:1}},
+        React.createElement('h3',{style:{fontSize:14,fontWeight:800,marginBottom:4}},r.name),
+        React.createElement('div',{style:{display:'flex',gap:5,flexWrap:'wrap'}},
+          React.createElement('span',{className:'tag tg'},r.category),
+          r.batchSize>1&&React.createElement('span',{className:'tag tm'},'دفعة: ',r.batchSize)
+        )
+      ),
+      React.createElement('div',{style:{display:'flex',gap:4}},
+        React.createElement('button',{onClick:onDup,style:{background:'rgba(62,207,191,.1)',borderRadius:7,padding:'5px 7px',color:'var(--ok)',fontSize:12}},'⧉'),
+        React.createElement('button',{onClick:onEdit,style:{background:'rgba(123,143,232,.1)',borderRadius:7,padding:'5px 7px',color:'var(--info)',fontSize:12}},'✏️'),
+        React.createElement('button',{onClick:onDel,style:{background:'rgba(255,107,107,.1)',borderRadius:7,padding:'5px 7px',color:'var(--err)',fontSize:12}},'🗑')
+      )
+    ),
+    r.description&&React.createElement('p',{style:{fontSize:12,color:'var(--muted2)',marginBottom:8,lineHeight:1.6}},r.description),
+    React.createElement('div',{className:'g2',style:{marginBottom:8}},
+      React.createElement('div',{className:'cost-box',style:{background:'rgba(255,107,107,.08)',border:'1px solid rgba(255,107,107,.13)'}},
+        React.createElement('div',{style:{fontSize:10,color:'var(--muted2)',marginBottom:2}},'تكلفة الإنتاج'),
+        React.createElement('div',{style:{fontSize:15,fontWeight:900,color:'var(--err)'}},fmt(r.totalCost,currency))
+      ),
+      React.createElement('div',{className:'cost-box',style:{background:'var(--goldBg)',border:'1px solid rgba(232,184,109,.16)'}},
+        React.createElement('div',{style:{fontSize:10,color:'var(--muted2)',marginBottom:2}},'تكلفة الوحدة'),
+        React.createElement('div',{style:{fontSize:15,fontWeight:900,color:'var(--gold)'}},fmt(r.costPerUnit,currency))
+      )
+    ),
+    r.sellingPrice>0&&React.createElement('div',{style:{background:'rgba(62,207,191,.07)',border:'1px solid rgba(62,207,191,.13)',borderRadius:9,padding:'7px 11px',marginBottom:8,display:'flex',justifyContent:'space-between',alignItems:'center'}},
+      React.createElement('span',{style:{fontSize:12,color:'var(--muted2)'}},'سعر البيع: ',fmt(r.sellingPrice,currency)),
+      React.createElement('span',{style:{fontWeight:900,fontSize:14,color:mc}},r.margin?.toFixed(1),'% ربح')
+    ),
+    React.createElement('button',{onClick:()=>setExp(!exp),style:{background:'none',color:'var(--muted2)',fontSize:11,display:'flex',alignItems:'center',gap:4}},
+      '🧪 ',r.ingredients?.length||0,' مكوّن ',exp?'▲':'▼'
+    ),
+    exp&&r.ingredients?.length>0&&React.createElement('div',{style:{marginTop:8,borderTop:'1px solid var(--border)',paddingTop:8}},
+      r.ingredients.map(ing=>{
+        const mat=materials.find(m=>m.id===ing.materialId);
+        return React.createElement('div',{key:ing.id,style:{display:'flex',justifyContent:'space-between',fontSize:11,padding:'4px 0',borderBottom:'1px solid var(--border)'}},
+          React.createElement('span',{style:{fontWeight:600}},mat?.name||React.createElement('span',{style:{color:'var(--err)'}},'محذوفة')),
+          React.createElement('span',{style:{color:'var(--muted)'}},ing.quantity,' ',ing.unit),
+          React.createElement('span',{style:{color:'var(--gold)',fontWeight:700}},fmt(ing.cost,currency))
+        );
+      }),
+      r.overhead>0&&React.createElement('div',{style:{display:'flex',justifyContent:'space-between',fontSize:11,padding:'4px 0',color:'var(--info)'}},
+        React.createElement('span',null,'نفقات إضافية'),React.createElement('span',null,fmt(r.overhead,currency))
+      )
+    )
+  );
+}
+
+function RecModal({recipe,materials,onSave,onClose,currency}){
+  const [name,setName]=useState(recipe?.name||'');
+  const [cat,setCat]=useState(recipe?.category||RC[0]);
+  const [desc,setDesc]=useState(recipe?.description||'');
+  const [sp,setSp]=useState(recipe?.sellingPrice||'');
+  const [bs,setBs]=useState(recipe?.batchSize||1);
+  const [ov,setOv]=useState(recipe?.overhead||'');
+  const [ings,setIngs]=useState(recipe?.ingredients||[]);
+  const [ni,setNi]=useState({matId:'',qty:'',unit:UN[0]});
+  const addIng=()=>{
+    const mat=materials.find(m=>m.id===ni.matId);
+    if(!mat||!ni.qty)return;
+    const qty=parseFloat(ni.qty);
+    setIngs(p=>[...p,{id:uid(),materialId:ni.matId,quantity:qty,unit:ni.unit,cost:mat.currentUnitCost*qty}]);
+    setNi(p=>({...p,matId:'',qty:''}));
+  };
+  const ingTotal=ings.reduce((s,i)=>{const m=materials.find(x=>x.id===i.materialId);return s+(m?m.currentUnitCost*i.quantity:0)},0);
+  const total=ingTotal+parseFloat(ov||0);
+  const bsN=Math.max(1,parseInt(bs)||1);
+  const cpu=total/bsN;
+  const margin=sp?((parseFloat(sp)-cpu)/parseFloat(sp))*100:null;
+  const niMat=materials.find(m=>m.id===ni.matId);
+  const niCost=niMat&&ni.qty?niMat.currentUnitCost*parseFloat(ni.qty):null;
+  const save=()=>{
+    if(!name.trim()||ings.length===0)return;
+    onSave({...(recipe||{}),name:name.trim(),category:cat,description:desc,sellingPrice:parseFloat(sp)||0,batchSize:bsN,overhead:parseFloat(ov)||0,ingredients:ings});
+  };
+  const h=React.createElement;
+  return h(Modal,{title:recipe?'✏️ تعديل الوصفة':'➕ إضافة وصفة',onClose,wide:true},
+    h('div',{style:{display:'flex',flexDirection:'column',gap:12}},
+      h('div',{className:'g2'},
+        h('div',null,h('label',{className:'lbl'},'اسم الوصفة *'),h('input',{value:name,onChange:e=>setName(e.target.value),placeholder:'مثال: كريم الوجه بالورد'})),
+        h('div',null,h('label',{className:'lbl'},'الفئة'),h('select',{value:cat,onChange:e=>setCat(e.target.value)},RC.map(c=>h('option',{key:c},c))))
+      ),
+      h('div',null,h('label',{className:'lbl'},'وصف (اختياري)'),h('textarea',{value:desc,onChange:e=>setDesc(e.target.value),rows:2,placeholder:'ملاحظات...'})),
+      h('div',{className:'g3'},
+        h('div',null,h('label',{className:'lbl'},'حجم الدفعة'),h('input',{type:'number',value:bs,onChange:e=>setBs(e.target.value),min:1,placeholder:'1'})),
+        h('div',null,h('label',{className:'lbl'},'نفقات إضافية'),h('input',{type:'number',value:ov,onChange:e=>setOv(e.target.value),placeholder:'0',min:0,step:'any'})),
+        h('div',null,h('label',{className:'lbl'},'سعر البيع'),h('input',{type:'number',value:sp,onChange:e=>setSp(e.target.value),placeholder:'0',min:0,step:'any'}))
+      ),
+      h('hr',{className:'hr'}),
+      h('h4',{style:{fontSize:14,fontWeight:800}},'🧪 المكونات'),
+      materials.length===0
+        ? h('div',{style:{background:'rgba(255,107,107,.08)',border:'1px solid rgba(255,107,107,.18)',borderRadius:9,padding:12,color:'var(--err)',fontSize:13,textAlign:'center'}},'لا توجد مواد خام — أضف مواد أولاً')
+        : h('div',{style:{background:'var(--card2)',borderRadius:11,padding:13,border:'1px solid var(--border2)'}},
+            h('div',{className:'g3',style:{marginBottom:10}},
+              h('div',null,h('label',{className:'lbl'},'المادة'),
+                h('select',{value:ni.matId,onChange:e=>setNi(p=>({...p,matId:e.target.value}))},
+                  h('option',{value:''},'اختر...'),
+                  materials.map(m=>h('option',{key:m.id,value:m.id},m.name,' (',fu4(m.currentUnitCost),'/',m.currentUnit,')'))
+                )
+              ),
+              h('div',null,h('label',{className:'lbl'},'الكمية'),h('input',{type:'number',value:ni.qty,onChange:e=>setNi(p=>({...p,qty:e.target.value})),placeholder:'30',min:0,step:'any'})),
+              h('div',null,h('label',{className:'lbl'},'الوحدة'),h('select',{value:ni.unit,onChange:e=>setNi(p=>({...p,unit:e.target.value}))},UN.map(u=>h('option',{key:u},u))))
+            ),
+            niCost!==null&&h('div',{style:{background:'rgba(62,207,191,.1)',borderRadius:7,padding:'5px 10px',fontSize:12,color:'var(--ok)',marginBottom:10}},'✓ تكلفة هذا المكون: ',fmt(niCost,currency)),
+            h('button',{className:'btn btn-o',style:{width:'100%',justifyContent:'center'},onClick:addIng},'+ إضافة المكوّن')
+          ),
+      ings.length>0&&h('div',null,
+        ings.map(ing=>{
+          const mat=materials.find(m=>m.id===ing.materialId);
+          const cost=mat?mat.currentUnitCost*ing.quantity:0;
+          return h('div',{key:ing.id,style:{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 11px',background:'var(--card2)',border:'1px solid var(--border)',borderRadius:9,marginBottom:5}},
+            h('div',null,
+              h('div',{style:{fontSize:13,fontWeight:700}},mat?.name||h('span',{style:{color:'var(--err)'}},'محذوفة')),
+              h('div',{style:{fontSize:11,color:'var(--muted)'}},ing.quantity,' ',ing.unit)
+            ),
+            h('div',{style:{display:'flex',alignItems:'center',gap:10}},
+              h('span',{style:{color:'var(--gold)',fontWeight:700,fontSize:13}},fmt(cost,currency)),
+              h('button',{onClick:()=>setIngs(p=>p.filter(i=>i.id!==ing.id)),style:{background:'none',color:'var(--err)',fontSize:14}},'✕')
+            )
+          );
+        })
+      ),
+      ings.length>0&&h('div',{style:{background:'var(--goldBg)',border:'1.5px solid rgba(232,184,109,.2)',borderRadius:12,padding:14}},
+        h('div',{className:'g3',style:{marginBottom:margin!==null?10:0}},
+          h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:10,color:'var(--muted2)',marginBottom:2}},'تكلفة المكونات'),h('div',{style:{fontSize:14,fontWeight:900}},fmt(ingTotal,currency))),
+          h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:10,color:'var(--muted2)',marginBottom:2}},'التكلفة الكلية'),h('div',{style:{fontSize:14,fontWeight:900,color:'var(--err)'}},fmt(total,currency))),
+          h('div',{style:{textAlign:'center'}},h('div',{style:{fontSize:10,color:'var(--muted2)',marginBottom:2}},'تكلفة الوحدة ÷',bsN),h('div',{style:{fontSize:14,fontWeight:900,color:'var(--gold)'}},fmt(cpu,currency)))
+        ),
+        margin!==null&&h('div',{style:{textAlign:'center',paddingTop:10,borderTop:'1px solid rgba(232,184,109,.18)'}},
+          h('span',{style:{fontSize:12,color:'var(--muted2)',marginLeft:6}},'هامش الربح: '),
+          h('span',{style:{fontSize:18,fontWeight:900,color:margin>50?'var(--ok)':margin>20?'var(--gold)':'var(--err)'}},margin.toFixed(1),'%')
+        )
+      ),
+      ings.length===0&&h('p',{style:{color:'var(--err)',fontSize:12,textAlign:'center'}},'* يجب إضافة مكوّن واحد على الأقل'),
+      h('div',{style:{display:'flex',gap:10}},
+        h('button',{className:'btn btn-g',style:{flex:1,justifyContent:'center'},onClick:save,disabled:!name.trim()||ings.length===0},'✓ ',recipe?'حفظ التغييرات':'إضافة الوصفة'),
+        h('button',{className:'btn btn-o',onClick:onClose},'إلغاء')
+      )
+    )
+  );
+}
+
+// ── Settings
+function SettingsPage({currency,setCurrency,materials,setMaterials,recipes,setRecipes,showToast}){
+  const doExport=()=>{
+    const d=JSON.stringify({materials,recipes,exportDate:new Date().toISOString()},null,2);
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([d],{type:'application/json'}));
+    a.download=`advax-backup-${today()}.json`;a.click();showToast('✓ تم تصدير البيانات');
+  };
+  const doImport=e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();r.onload=ev=>{
+      try{const d=JSON.parse(ev.target.result);if(d.materials)setMaterials(d.materials);if(d.recipes)setRecipes(d.recipes);showToast('✓ تم استيراد البيانات')}
+      catch{showToast('خطأ في الملف','err')}
+    };r.readAsText(f);e.target.value='';
+  };
+  const doReset=()=>{if(window.confirm('⚠️ مسح كل البيانات؟ لا يمكن التراجع!')){setMaterials([]);setRecipes([]);showToast('تم مسح كل البيانات','err')}};
+  const h=React.createElement;
+  return h('div',{className:'fu',style:{maxWidth:560}},
+    h('h1',{style:{fontSize:22,fontWeight:900,marginBottom:20}},'⚙️ الإعدادات'),
+    h('div',{className:'sec'},
+      h('h3',{style:{fontSize:15,fontWeight:800,marginBottom:3}},'💰 العملة الافتراضية'),
+      h('p',{style:{fontSize:12,color:'var(--muted)',marginBottom:12}},'تُستخدم في جميع الحسابات'),
+      h('div',{style:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(95px,1fr))',gap:8}},
+        CURR.map(c=>h('button',{key:c.code,onClick:()=>{setCurrency(c.code);showToast(`✓ العملة: ${c.name}`)},style:{padding:'11px 6px',borderRadius:10,textAlign:'center',fontFamily:'Cairo,sans-serif',transition:'all .2s',border:`2px solid ${currency===c.code?'var(--gold)':'var(--border2)'}`,background:currency===c.code?'var(--goldBg)':'var(--card2)',color:currency===c.code?'var(--gold)':'var(--text)'}},
+          h('div',{style:{fontSize:16,fontWeight:900}},c.sym),
+          h('div',{style:{fontSize:12,fontWeight:700,marginTop:3}},c.code),
+          h('div',{style:{fontSize:10,color:currency===c.code?'var(--gold)':'var(--muted)',marginTop:1}},c.name)
+        ))
+      )
+    ),
+    h('div',{className:'sec'},
+      h('h3',{style:{fontSize:15,fontWeight:800,marginBottom:3}},'💾 إدارة البيانات'),
+      h('p',{style:{fontSize:12,color:'var(--muted)',marginBottom:10}},'بياناتك محفوظة في المتصفح — صدّر نسخة احتياطية بانتظام'),
+      h('div',{style:{background:'var(--card2)',borderRadius:9,padding:'9px 13px',marginBottom:12,display:'flex',justifyContent:'space-between',fontSize:12}},
+        h('span',{style:{color:'var(--muted2)'}},'المواد: ',h('b',{style:{color:'var(--text)'}},materials.length)),
+        h('span',{style:{color:'var(--muted2)'}},'الوصفات: ',h('b',{style:{color:'var(--text)'}},recipes.length))
+      ),
+      h('div',{style:{display:'flex',flexDirection:'column',gap:8}},
+        h('button',{className:'btn btn-o',style:{justifyContent:'flex-start',gap:10,width:'100%'},onClick:doExport},'⬇ تصدير كل البيانات (JSON)',h('span',{style:{marginRight:'auto',fontSize:11,color:'var(--muted)'}},'نسخة احتياطية')),
+        h('label',{style:{display:'block',cursor:'pointer'}},
+          h('div',{className:'btn btn-o',style:{justifyContent:'flex-start',gap:10,width:'100%',display:'flex'}},'⬆ استيراد بيانات (JSON)',h('span',{style:{marginRight:'auto',fontSize:11,color:'var(--muted)'}},'استعادة نسخة')),
+          h('input',{type:'file',accept:'.json',onChange:doImport,style:{display:'none'}})
+        ),
+        h('button',{className:'btn btn-r',style:{justifyContent:'flex-start',gap:10,width:'100%'},onClick:doReset},'🗑 مسح جميع البيانات')
+      )
+    ),
+    h('div',{style:{textAlign:'center',color:'var(--muted)',fontSize:12,marginTop:16}},
+      h('div',{style:{fontWeight:800,color:'var(--gold)',marginBottom:3}},'AdVax Studio'),
+      h('div',null,'حاسبة تكاليف الإنتاج · AdVax © ',new Date().getFullYear()),
+      h('div',{style:{marginTop:2,color:'var(--border2)'}},'Know your cost. Grow your craft.')
+    )
+  );
+}
+
+// ── App Root
+function App(){
+  const [page,setPage]=useState('dashboard');
+  const [materials,setMaterials]=useLS('advax-materials',[]);
+  const [recipes,setRecipes]=useLS('advax-recipes',[]);
+  const [currency,setCurrency]=useLS('advax-currency','SAR');
+  const [sbOpen,setSbOpen]=useState(false);
+  const [toast,setToast]=useState(null);
+  const {pt,done,ios,install}=usePWA();
+
+  const showToast=(msg,type='ok')=>{setToast({msg,type});setTimeout(()=>setToast(null),3000)};
+
+  // ✨ Reactive cost engine
+  const recipesWithCosts=useMemo(()=>recipes.map(recipe=>{
+    const ingredients=(recipe.ingredients||[]).map(ing=>{
+      const mat=materials.find(m=>m.id===ing.materialId);
+      return{...ing,cost:mat?mat.currentUnitCost*ing.quantity:0};
+    });
+    const ingTotal=ingredients.reduce((s,i)=>s+i.cost,0);
+    const total=ingTotal+(recipe.overhead||0);
+    const bs=Math.max(1,recipe.batchSize||1);
+    const cpu=total/bs;
+    const margin=recipe.sellingPrice>0?((recipe.sellingPrice-cpu)/recipe.sellingPrice)*100:null;
+    return{...recipe,ingredients,totalCost:total,costPerUnit:cpu,margin};
+  }),[recipes,materials]);
+
+  const showInstall=!done&&(pt||ios);
+  const common={currency,showToast};
+
+  return React.createElement('div',{style:{display:'flex',height:'100vh',overflow:'hidden',background:'var(--bg)',color:'var(--text)',fontFamily:"'Cairo',sans-serif",direction:'rtl'}},
+    React.createElement(Sidebar,{page,setPage,open:sbOpen,setOpen:setSbOpen}),
+    React.createElement('div',{style:{flex:1,display:'flex',flexDirection:'column',overflow:'hidden',minWidth:0}},
+      React.createElement('header',{style:{padding:'13px 16px',borderBottom:'1.5px solid var(--border)',background:'var(--surf)',display:'flex',alignItems:'center',gap:10,flexShrink:0}},
+        React.createElement('button',{onClick:()=>setSbOpen(true),style:{background:'rgba(255,255,255,.06)',borderRadius:8,padding:'7px 9px',color:'var(--muted2)',flexShrink:0,display:'flex',fontSize:18}},'☰'),
+        React.createElement('div',{style:{display:'flex',alignItems:'center',gap:8,flex:1,justifyContent:'center'}},
+          React.createElement('div',{style:{width:30,height:30,borderRadius:8,background:'linear-gradient(135deg,#E8B86D,#F5CC80)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:17}},'🧪'),
+          React.createElement('span',{style:{fontWeight:900,fontSize:16,color:'var(--gold)',whiteSpace:'nowrap'}},'AdVax Studio')
+        ),
+        React.createElement('div',{style:{display:'flex',gap:7,flexShrink:0,alignItems:'center'}},
+          showInstall&&!ios&&React.createElement('button',{onClick:install,className:'btn btn-g',style:{padding:'6px 11px',fontSize:12}},'⬇ تثبيت'),
+          React.createElement('span',{style:{fontSize:12,color:'var(--muted)',background:'var(--card2)',padding:'4px 10px',borderRadius:20,border:'1px solid var(--border)'}},currency)
+        )
+      ),
+      React.createElement('main',{style:{flex:1,overflowY:'auto',padding:'20px 14px'}},
+        page==='dashboard'&&React.createElement(Dashboard,{materials,recipes:recipesWithCosts,currency,setPage}),
+        page==='materials'&&React.createElement(Materials,{materials,setMaterials,...common}),
+        page==='recipes'&&React.createElement(Recipes,{recipes:recipesWithCosts,setRecipes,materials,...common}),
+        page==='settings'&&React.createElement(SettingsPage,{currency,setCurrency,materials,setMaterials,recipes,setRecipes,showToast})
+      )
+    ),
+    React.createElement(InstallBanner,null),
+    React.createElement(Toast,{t:toast})
+  );
+}
+
+// Mount
+const root=ReactDOM.createRoot(document.getElementById('root'));
+root.render(React.createElement(App));
+
+// Register Service Worker
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
